@@ -49,6 +49,7 @@ export default function SmartSalaryAnalysis({
     grade: '',
     yearsOfExperience: '',
     lastDrawnSalary: '',
+    expectedSalary: '',
     bandMinRM: '',
     bandMidRM: '',
     bandMaxRM: '',
@@ -87,9 +88,13 @@ export default function SmartSalaryAnalysis({
   const bandMidRM = parseNumber(formData.bandMidRM);
   const bandMaxRM = parseNumber(formData.bandMaxRM);
   const lastDrawnSalary = parseNumber(formData.lastDrawnSalary);
+  const expectedSalary = parseNumber(formData.expectedSalary);
 
   const salaryIncrement = lastDrawnSalary > 0 ? totalSalary - lastDrawnSalary : 0;
   const salaryIncrementPercentage = lastDrawnSalary > 0 ? ((salaryIncrement / lastDrawnSalary) * 100) : 0;
+
+  const expectedVsProposed = expectedSalary > 0 ? totalSalary - expectedSalary : 0;
+  const expectedVsProposedPercentage = expectedSalary > 0 ? ((expectedVsProposed / expectedSalary) * 100) : 0;
 
   const getSalaryRangeFit = () => {
     if (!bandMinRM || !bandMaxRM) {
@@ -147,6 +152,8 @@ export default function SmartSalaryAnalysis({
           yearsOfExperience: formData.yearsOfExperience,
           basicSalary: basicSalaryNum,
           totalSalary: totalSalary,
+          lastDrawnSalary: lastDrawnSalary,
+          expectedSalary: expectedSalary,
           bandMin: bandMinRM,
           bandMid: bandMidRM,
           bandMax: bandMaxRM,
@@ -300,6 +307,20 @@ export default function SmartSalaryAnalysis({
         />
       </div>
 
+      {/* Expected Salary */}
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-2">
+          Expected Salary (RM) <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          value={formData.expectedSalary}
+          onChange={(e) => setFormData({ ...formData, expectedSalary: e.target.value })}
+          placeholder="e.g., 8500 or RM 8,500"
+          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+        />
+      </div>
+
       {/* Salary Input */}
       <div>
         <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -378,6 +399,26 @@ export default function SmartSalaryAnalysis({
                   'text-slate-600'
                 }`}>
                   {salaryIncrementPercentage > 0 ? '+' : ''}{salaryIncrementPercentage.toFixed(1)}%
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {expectedSalary > 0 && (
+          <div className="mt-3 pt-3 border-t border-green-200">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-slate-600">Difference from Expected Salary</span>
+              <div className="text-right">
+                <div className={`text-sm font-semibold ${
+                  expectedVsProposed >= 0 ? 'text-green-700' : 'text-red-700'
+                }`}>
+                  RM {Math.abs(expectedVsProposed).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
+                <div className={`text-xs font-bold ${
+                  expectedVsProposed >= 0 ? 'text-green-600' : 'text-red-600'
+                }`}>
+                  {expectedVsProposed >= 0 ? 'Above' : 'Below'} by {Math.abs(expectedVsProposedPercentage).toFixed(1)}%
                 </div>
               </div>
             </div>

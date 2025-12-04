@@ -20,6 +20,8 @@ Deno.serve(async (req: Request) => {
       yearsOfExperience,
       basicSalary,
       totalSalary,
+      lastDrawnSalary,
+      expectedSalary,
       bandMin,
       bandMid,
       bandMax,
@@ -35,16 +37,18 @@ Deno.serve(async (req: Request) => {
 
 Job Title: ${jobTitle}
 Years of Experience: ${yearsOfExperience} years
-Basic Salary: RM ${basicSalary?.toLocaleString()}
-Total Salary: RM ${totalSalary?.toLocaleString()}
+Last Drawn Salary: RM ${lastDrawnSalary?.toLocaleString()}
+Candidate's Expected Salary: RM ${expectedSalary?.toLocaleString()}
+Proposed Basic Salary: RM ${basicSalary?.toLocaleString()}
+Proposed Total Salary: RM ${totalSalary?.toLocaleString()}
 Internal Band Range: RM ${bandMin?.toLocaleString()} - RM ${bandMax?.toLocaleString()} (Midpoint: RM ${bandMid?.toLocaleString()})
 Total Cost to Company (CTC): RM ${totalCTC?.toLocaleString()}
 
 Provide a concise, professional assessment covering:
-1. Whether the basic salary is appropriate for the experience level and position
-2. How it compares to the internal band (is it competitive within the organization?)
-3. Any concerns or positive notes about the overall package
-4. A brief recommendation
+1. Whether the proposed salary is appropriate for the experience level and position
+2. How it compares to the internal band and the candidate's expectations
+3. Whether there's a significant gap between expected and proposed salary that may affect acceptance
+4. A brief recommendation on negotiation strategy or approval
 
 Keep the response to 3-4 sentences maximum. Be direct and professional.`;
 
