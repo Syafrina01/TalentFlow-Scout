@@ -84,6 +84,32 @@ export async function uploadAssessmentReport(candidateId: string, file: File): P
   return publicUrl;
 }
 
+export async function deleteAssessmentReport(candidateId: string, reportUrl: string): Promise<void> {
+  // Extract the file path from the URL
+  const urlParts = reportUrl.split('/assessment-reports/');
+  if (urlParts.length < 2) throw new Error('Invalid report URL');
+
+  const filePath = urlParts[1].split('?')[0];
+
+  // Delete from storage
+  const { error: deleteError } = await supabase.storage
+    .from('assessment-reports')
+    .remove([filePath]);
+
+  if (deleteError) throw deleteError;
+
+  // Update database to remove the URL and file name
+  const { error: updateError } = await supabase
+    .from('candidate_hiring_flow')
+    .update({
+      assessment_report_url: null,
+      assessment_report_name: null,
+    })
+    .eq('candidate_id', candidateId);
+
+  if (updateError) throw updateError;
+}
+
 export async function updateAssessmentScore(candidateId: string, score: string): Promise<void> {
   const { error } = await supabase
     .from('candidate_hiring_flow')
@@ -136,6 +162,32 @@ export async function uploadBackgroundCheckDocument(candidateId: string, file: F
   if (updateError) throw updateError;
 
   return publicUrl;
+}
+
+export async function deleteBackgroundCheckDocument(candidateId: string, documentUrl: string): Promise<void> {
+  // Extract the file path from the URL
+  const urlParts = documentUrl.split('/background-check-documents/');
+  if (urlParts.length < 2) throw new Error('Invalid document URL');
+
+  const filePath = urlParts[1].split('?')[0];
+
+  // Delete from storage
+  const { error: deleteError } = await supabase.storage
+    .from('background-check-documents')
+    .remove([filePath]);
+
+  if (deleteError) throw deleteError;
+
+  // Update database to remove the URL and file name
+  const { error: updateError } = await supabase
+    .from('candidate_hiring_flow')
+    .update({
+      background_check_document_url: null,
+      background_check_document_name: null,
+    })
+    .eq('candidate_id', candidateId);
+
+  if (updateError) throw updateError;
 }
 
 export async function updateBackgroundCheckStatus(candidateId: string, status: 'Pending' | 'Completed'): Promise<void> {

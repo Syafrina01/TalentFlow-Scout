@@ -1,7 +1,7 @@
 import { useState, useEffect, Fragment } from 'react';
 import { RefreshCw, Search, Users, CheckCircle, Clock, AlertCircle, Mail, FileCheck, DollarSign, Send, ChevronDown, ChevronUp, X, Eye, Upload, Download, Plus, Edit2, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { sendAssessmentNotification, uploadAssessmentReport, updateAssessmentScore, updateAssessmentStatus, updateBackgroundCheckStatus, updateCurrentStep, uploadBackgroundCheckDocument, saveSalaryProposal, sendVerificationRequest, updateVerificationDecision, sendApprovalRequest, HiringCandidate as ImportedHiringCandidate } from '../../services/hiringFlowService';
+import { sendAssessmentNotification, uploadAssessmentReport, deleteAssessmentReport, updateAssessmentScore, updateAssessmentStatus, updateBackgroundCheckStatus, updateCurrentStep, uploadBackgroundCheckDocument, deleteBackgroundCheckDocument, saveSalaryProposal, sendVerificationRequest, updateVerificationDecision, sendApprovalRequest, HiringCandidate as ImportedHiringCandidate } from '../../services/hiringFlowService';
 import SmartSalaryAnalysis from '../hiring/SmartSalaryAnalysis';
 import { getPublicBaseUrl } from '../../utils/urlHelper';
 import EditCandidateModal from '../EditCandidateModal';
@@ -407,6 +407,32 @@ ${emailPreview.senderName}`;
     }
   };
 
+  const handleDeleteAssessmentReport = async (candidateId: string, reportUrl: string) => {
+    if (!confirm('Are you sure you want to delete this assessment report?')) {
+      return;
+    }
+    try {
+      await deleteAssessmentReport(candidateId, reportUrl);
+      await loadCandidates();
+    } catch (error) {
+      console.error('Error deleting assessment report:', error);
+      alert('Failed to delete assessment report');
+    }
+  };
+
+  const handleDeleteBackgroundCheck = async (candidateId: string, documentUrl: string) => {
+    if (!confirm('Are you sure you want to delete this background check document?')) {
+      return;
+    }
+    try {
+      await deleteBackgroundCheckDocument(candidateId, documentUrl);
+      await loadCandidates();
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      alert('Failed to delete document');
+    }
+  };
+
   const calculateTotalSalary = (basicSalary: string, allowances: Array<{name: string, amount: string}>): number => {
     const parseAmount = (str: string): number => {
       const cleaned = str.replace(/[^0-9.]/g, '');
@@ -734,16 +760,25 @@ ${emailPreview.senderName}`;
                                     <div className="flex items-center gap-2 text-sm text-slate-700 bg-slate-50 p-2 rounded">
                                       <FileCheck className="w-4 h-4 text-green-600" />
                                       <span className="flex-1 truncate">{candidate.assessment_report_name}</span>
-                                      {candidate.assessment_report_url && (
-                                        <a
-                                          href={candidate.assessment_report_url}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="text-cyan-600 hover:text-cyan-700"
+                                      <div className="flex gap-2">
+                                        {candidate.assessment_report_url && (
+                                          <a
+                                            href={candidate.assessment_report_url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-cyan-600 hover:text-cyan-700"
+                                          >
+                                            <Download className="w-4 h-4" />
+                                          </a>
+                                        )}
+                                        <button
+                                          onClick={() => candidate.assessment_report_url && handleDeleteAssessmentReport(candidate.candidate_id, candidate.assessment_report_url)}
+                                          className="text-red-600 hover:text-red-700"
+                                          title="Delete assessment report"
                                         >
-                                          <Download className="w-4 h-4" />
-                                        </a>
-                                      )}
+                                          <Trash2 className="w-4 h-4" />
+                                        </button>
+                                      </div>
                                     </div>
                                   )}
 
@@ -827,16 +862,25 @@ ${emailPreview.senderName}`;
                                     <div className="flex items-center gap-2 text-sm text-slate-700 bg-slate-50 p-2 rounded">
                                       <FileCheck className="w-4 h-4 text-green-600" />
                                       <span className="flex-1 truncate">{candidate.background_check_document_name}</span>
-                                      {candidate.background_check_document_url && (
-                                        <a
-                                          href={candidate.background_check_document_url}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="text-cyan-600 hover:text-cyan-700"
+                                      <div className="flex gap-2">
+                                        {candidate.background_check_document_url && (
+                                          <a
+                                            href={candidate.background_check_document_url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-cyan-600 hover:text-cyan-700"
+                                          >
+                                            <Download className="w-4 h-4" />
+                                          </a>
+                                        )}
+                                        <button
+                                          onClick={() => candidate.background_check_document_url && handleDeleteBackgroundCheck(candidate.candidate_id, candidate.background_check_document_url)}
+                                          className="text-red-600 hover:text-red-700"
+                                          title="Delete background check document"
                                         >
-                                          <Download className="w-4 h-4" />
-                                        </a>
-                                      )}
+                                          <Trash2 className="w-4 h-4" />
+                                        </button>
+                                      </div>
                                     </div>
                                   )}
 
