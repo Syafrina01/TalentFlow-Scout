@@ -16,6 +16,22 @@ interface SmartSalaryAnalysisProps {
   saving?: boolean;
 }
 
+const SALARY_BANDS: Record<string, { min: number; mid: number; max: number }> = {
+  'E2': { min: 34900, mid: 50515, max: 66130 },
+  'E3': { min: 28500, mid: 41870, max: 55240 },
+  'E4': { min: 18600, mid: 31690, max: 44780 },
+  'E5': { min: 14500, mid: 24695, max: 34890 },
+  'E6': { min: 11000, mid: 18690, max: 26380 },
+  'E7': { min: 7500, mid: 11902, max: 16304 },
+  'E8': { min: 6600, mid: 10325, max: 14050 },
+  'E9': { min: 3650, mid: 6739, max: 9827 },
+  'E10': { min: 2780, mid: 5273, max: 7765 },
+  'E11': { min: 1890, mid: 4032, max: 6174 },
+  'NE2': { min: 1700, mid: 2711, max: 4100 },
+  'NE1': { min: 1700, mid: 2094, max: 3030 },
+  'NEG': { min: 1700, mid: 1879, max: 2760 },
+};
+
 export default function SmartSalaryAnalysis({
   basicSalary,
   allowances,
@@ -41,6 +57,18 @@ export default function SmartSalaryAnalysis({
 
   const [aiInsight, setAiInsight] = useState('');
   const [generatingInsight, setGeneratingInsight] = useState(false);
+
+  useEffect(() => {
+    if (formData.grade && SALARY_BANDS[formData.grade]) {
+      const band = SALARY_BANDS[formData.grade];
+      setFormData(prev => ({
+        ...prev,
+        bandMinRM: band.min.toString(),
+        bandMidRM: band.mid.toString(),
+        bandMaxRM: band.max.toString(),
+      }));
+    }
+  }, [formData.grade]);
 
   const parseNumber = (value: string): number => {
     if (!value) return 0;
@@ -373,9 +401,9 @@ export default function SmartSalaryAnalysis({
               <input
                 type="text"
                 value={formData.bandMinRM}
-                onChange={(e) => setFormData({ ...formData, bandMinRM: e.target.value })}
-                placeholder="e.g., 6000"
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm"
+                readOnly
+                placeholder="Auto-filled"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-sm text-slate-700"
               />
             </div>
             <div>
@@ -383,9 +411,9 @@ export default function SmartSalaryAnalysis({
               <input
                 type="text"
                 value={formData.bandMidRM}
-                onChange={(e) => setFormData({ ...formData, bandMidRM: e.target.value })}
-                placeholder="e.g., 8000"
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm"
+                readOnly
+                placeholder="Auto-filled"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-sm text-slate-700"
               />
             </div>
             <div>
@@ -393,9 +421,9 @@ export default function SmartSalaryAnalysis({
               <input
                 type="text"
                 value={formData.bandMaxRM}
-                onChange={(e) => setFormData({ ...formData, bandMaxRM: e.target.value })}
-                placeholder="e.g., 10000"
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 text-sm"
+                readOnly
+                placeholder="Auto-filled"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-sm text-slate-700"
               />
             </div>
           </div>
