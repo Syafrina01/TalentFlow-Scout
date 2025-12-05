@@ -1105,29 +1105,36 @@ ${emailPreview.senderName}`;
                                     </div>
                                   </div>
 
-                                  <div className="flex gap-2 mt-3">
-                                    <input
-                                      type="email"
-                                      id={`verifier-${candidate.candidate_id}`}
-                                      placeholder="Verifier email (Head, Talent Strategy)"
-                                      className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
-                                    />
-                                    <button
-                                      onClick={async () => {
-                                        const verifierInput = document.getElementById(`verifier-${candidate.candidate_id}`) as HTMLInputElement;
-                                        const verifierEmail = verifierInput?.value;
-                                        if (!verifierEmail) {
-                                          showNotification('Please enter verifier email', 'error');
-                                          return;
-                                        }
-                                        await handlePreviewVerificationEmail(candidate, verifierEmail);
-                                      }}
-                                      disabled={processingAction === candidate.candidate_id}
-                                      className="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors text-sm flex items-center gap-2 disabled:opacity-50"
-                                    >
-                                      <Eye className="w-4 h-4" />
-                                      Preview Email
-                                    </button>
+                                  <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-3 mt-3">
+                                    <h5 className="font-semibold text-cyan-900 mb-2 flex items-center gap-2">
+                                      <Shield className="w-4 h-4" />
+                                      Send for Verification
+                                    </h5>
+                                    <p className="text-xs text-cyan-700 mb-2">Enter verifier email to send salary package for approval</p>
+                                    <div className="flex gap-2">
+                                      <input
+                                        type="email"
+                                        id={`verifier-${candidate.candidate_id}`}
+                                        placeholder="Verifier email (Head, Talent Strategy)"
+                                        className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                                      />
+                                      <button
+                                        onClick={async () => {
+                                          const verifierInput = document.getElementById(`verifier-${candidate.candidate_id}`) as HTMLInputElement;
+                                          const verifierEmail = verifierInput?.value;
+                                          if (!verifierEmail) {
+                                            showNotification('Please enter verifier email', 'error');
+                                            return;
+                                          }
+                                          await handlePreviewVerificationEmail(candidate, verifierEmail);
+                                        }}
+                                        disabled={processingAction === candidate.candidate_id}
+                                        className="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors text-sm flex items-center gap-2 disabled:opacity-50"
+                                      >
+                                        <Eye className="w-4 h-4" />
+                                        Preview Email
+                                      </button>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
