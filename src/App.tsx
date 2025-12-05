@@ -3,6 +3,7 @@ import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import ApprovalResponse from './pages/ApprovalResponse';
 import SalaryVerification from './pages/SalaryVerification';
+import RecommendationResponse from './pages/RecommendationResponse';
 import { Loader2 } from 'lucide-react';
 
 function App() {
@@ -24,6 +25,11 @@ function App() {
   if (hasApprovalToken || currentPath === '/approve') {
     console.log('[App Router] Rendering ApprovalResponse page (public access)');
     return <ApprovalResponse />;
+  }
+
+  if (currentPath === '/recommendation-response') {
+    console.log('[App Router] Rendering RecommendationResponse page (public access)');
+    return <RecommendationResponse />;
   }
 
   const { user, loading } = useAuth();

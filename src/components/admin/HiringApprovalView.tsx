@@ -3,6 +3,7 @@ import { RefreshCw, Search, Users, CheckCircle, Clock, AlertCircle, Mail, FileCh
 import { supabase } from '../../lib/supabase';
 import { sendAssessmentNotification, uploadAssessmentReport, deleteAssessmentReport, updateAssessmentScore, updateAssessmentStatus, updateBackgroundCheckStatus, updateCurrentStep, uploadBackgroundCheckDocument, deleteBackgroundCheckDocument, saveSalaryProposal, sendVerificationRequest, updateVerificationDecision, sendApprovalRequest, HiringCandidate as ImportedHiringCandidate } from '../../services/hiringFlowService';
 import SmartSalaryAnalysis from '../hiring/SmartSalaryAnalysis';
+import RecommendationSection from '../hiring/RecommendationSection';
 import { getPublicBaseUrl } from '../../utils/urlHelper';
 import EditCandidateModal from '../EditCandidateModal';
 import { updateCandidate, deleteCandidate } from '../../services/candidateService';
@@ -1191,6 +1192,17 @@ ${emailPreview.senderName}`;
                                   )}
                                 </div>
                               </div>
+                            )}
+
+                            {candidate.approvals?.verifier && (
+                              <RecommendationSection
+                                candidate={candidate}
+                                onSuccess={() => {
+                                  showNotification('Recommendation request sent successfully', 'success');
+                                  loadCandidates();
+                                }}
+                                onError={(message) => showNotification(message, 'error')}
+                              />
                             )}
 
                             {(candidate.current_step?.includes('Ready for Recommendation') || candidate.current_step?.includes('Ready for Approval')) && (
