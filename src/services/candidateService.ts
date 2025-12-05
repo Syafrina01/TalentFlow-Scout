@@ -155,17 +155,25 @@ export async function scoreCandidate(candidate: Candidate): Promise<Candidate> {
 
     if (error) {
       console.error('Database update error:', error);
-      throw error;
+      throw new Error(`Database error: ${error.message}`);
     }
 
     console.log('Candidate scored successfully!');
     return data;
   } catch (error) {
     console.error('Error in scoreCandidate:', error);
+    console.error('Error type:', typeof error);
+    console.error('Error details:', JSON.stringify(error, null, 2));
+
     if (error instanceof Error) {
       throw new Error(`Failed to score candidate: ${error.message}`);
     }
-    throw new Error('Failed to score candidate: Unknown error');
+
+    const errorMessage = typeof error === 'string' ? error :
+                        error && typeof error === 'object' && 'message' in error ? String((error as any).message) :
+                        'Unknown error occurred. Check browser console for details.';
+
+    throw new Error(`Failed to score candidate: ${errorMessage}`);
   }
 }
 
