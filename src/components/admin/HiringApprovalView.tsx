@@ -29,6 +29,18 @@ interface VerificationEmailPreview {
   candidate: HiringCandidate;
 }
 
+interface ApprovalEmailPreview {
+  candidateId: string;
+  candidateName: string;
+  position: string;
+  recipientEmail: string;
+  recipientLabel: string;
+  approvalType: 'hm1' | 'hm2' | 'approver1' | 'approver2';
+  token: string;
+  approveUrl: string;
+  candidate: HiringCandidate;
+}
+
 export default function HiringApprovalView() {
   const [candidates, setCandidates] = useState<HiringCandidate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,6 +49,7 @@ export default function HiringApprovalView() {
   const [processingAction, setProcessingAction] = useState<string | null>(null);
   const [emailPreview, setEmailPreview] = useState<EmailPreview | null>(null);
   const [verificationEmailPreview, setVerificationEmailPreview] = useState<VerificationEmailPreview | null>(null);
+  const [approvalEmailPreview, setApprovalEmailPreview] = useState<ApprovalEmailPreview | null>(null);
   const [uploadingDocument, setUploadingDocument] = useState<string | null>(null);
   const [uploadingAssessment, setUploadingAssessment] = useState<string | null>(null);
   const [assessmentScores, setAssessmentScores] = useState<{ [key: string]: string }>({});
@@ -179,6 +192,72 @@ Talent Acquisition Team`;
     } finally {
       setProcessingAction(null);
     }
+  };
+
+  const handlePreviewApprovalEmail = async (candidate: HiringCandidate, approvalType: 'hm1' | 'hm2' | 'approver1' | 'approver2', recipientEmail: string, recipientLabel: string) => {
+    try {
+      setProcessingAction(candidate.candidate_id);
+      const token = await sendApprovalRequest(candidate, approvalType, recipientEmail);
+      const baseUrl = getPublicBaseUrl();
+      const approveUrl = `${baseUrl}/approve?token=${token}&type=${approvalType}&candidate=${encodeURIComponent(candidate.name)}&position=${encodeURIComponent(candidate.position)}`;
+
+      setApprovalEmailPreview({
+        candidateId: candidate.candidate_id,
+        candidateName: candidate.name,
+        position: candidate.position,
+        recipientEmail,
+        recipientLabel,
+        approvalType,
+        token,
+        approveUrl,
+        candidate
+      });
+    } catch (error) {
+      showNotification('Failed to generate request', 'error');
+    } finally {
+      setProcessingAction(null);
+    }
+  };
+
+  const handleSendApprovalEmail = () => {
+    if (!approvalEmailPreview) return;
+
+    const isRecommendation = approvalEmailPreview.approvalType.includes('hm');
+    const subject = `${isRecommendation ? 'Recommendation' : 'Approval'} Request - ${approvalEmailPreview.candidateName} (${approvalEmailPreview.position})`;
+    const body = `Dear ${approvalEmailPreview.recipientLabel},
+
+You have been requested to provide your ${isRecommendation ? 'recommendation' : 'decision'} for the following candidate:
+
+Candidate Information:
+- Name: ${approvalEmailPreview.candidateName}
+- Position: ${approvalEmailPreview.position}
+- Recruiter: ${approvalEmailPreview.candidate.recruiter} (${approvalEmailPreview.candidate.recruiter_email})
+
+Assessment & Background Check:
+- Assessment Status: ${approvalEmailPreview.candidate.assessment_status}${approvalEmailPreview.candidate.assessment_score ? `\n- Assessment Score: ${approvalEmailPreview.candidate.assessment_score}` : ''}
+- Background Check: ${approvalEmailPreview.candidate.background_check_status}
+
+${approvalEmailPreview.candidate.salary_proposal ? `Proposed Salary Package:
+- Basic Salary: ${approvalEmailPreview.candidate.salary_proposal.basic_salary}${approvalEmailPreview.candidate.salary_proposal.allowances && approvalEmailPreview.candidate.salary_proposal.allowances.length > 0 ? '\nAllowances:\n' + approvalEmailPreview.candidate.salary_proposal.allowances.map((a: any) => `- ${a.name}: ${a.amount}`).join('\n') : ''}
+- Total Salary: ${approvalEmailPreview.candidate.salary_proposal.total_salary}
+
+` : ''}${isRecommendation ? 'RECOMMENDATION' : 'APPROVAL'} LINK:
+${approvalEmailPreview.approveUrl}
+
+Click the link above to submit your ${isRecommendation ? 'recommendation' : 'decision'}:
+✓ Approve  |  ⟳ Needs Revision  |  ✗ Reject
+
+Note: This link is valid for 7 days and can only be used once.
+
+If you have any questions, please contact the recruitment team.
+
+Best regards,
+Talent Acquisition Team`;
+
+    const mailtoLink = `mailto:${approvalEmailPreview.recipientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.open(mailtoLink, '_blank');
+    setApprovalEmailPreview(null);
+    loadCandidates();
   };
 
   const handleResendVerificationEmail = async (candidateId: string, newEmail: string) => {
@@ -1259,32 +1338,13 @@ ${emailPreview.senderName}`;
                                       return;
                                     }
 
-                                    if (confirm(`Send request to ${mapping.label} (${mapping.email})?`)) {
-                                      setProcessingAction(candidate.candidate_id);
-                                      try {
-                                        const token = await sendApprovalRequest(candidate, mapping.type, mapping.email);
-                                        const baseUrl = getPublicBaseUrl();
-                                        const approveUrl = `${baseUrl}/approve?token=${token}&type=${mapping.type}&candidate=${encodeURIComponent(candidate.name)}&position=${encodeURIComponent(candidate.position)}`;
-
-                                        const subject = `${mapping.type.includes('hm') ? 'Recommendation' : 'Approval'} Request - ${candidate.name} (${candidate.position})`;
-                                        const body = `Please review and provide your ${mapping.type.includes('hm') ? 'recommendation' : 'decision'} for:\n\nCandidate: ${candidate.name}\nPosition: ${candidate.position}\n\nClick here to respond:\n${approveUrl}\n\nThis link is valid for 7 days.`;
-
-                                        const mailtoLink = `mailto:${mapping.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-                                        window.open(mailtoLink, '_blank');
-
-                                        await loadCandidates();
-                                      } catch (error) {
-                                        showNotification('Failed to generate request', 'error');
-                                      } finally {
-                                        setProcessingAction(null);
-                                      }
-                                    }
+                                    await handlePreviewApprovalEmail(candidate, mapping.type, mapping.email, mapping.label);
                                   }}
                                   disabled={processingAction === candidate.candidate_id}
                                   className="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors text-sm flex items-center gap-2 disabled:opacity-50"
                                 >
-                                  <Send className="w-4 h-4" />
-                                  Send Request Email
+                                  <Eye className="w-4 h-4" />
+                                  Preview Request Email
                                 </button>
                               </div>
                             )}
@@ -1604,6 +1664,155 @@ ${emailPreview.senderName}`;
                 onClick={handleSendVerificationEmail}
                 disabled={processingAction === verificationEmailPreview.candidateId}
                 className="px-6 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+              >
+                <Mail className="w-4 h-4" />
+                Open Draft in Email
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {approvalEmailPreview && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-slate-800">
+                {approvalEmailPreview.approvalType.includes('hm') ? 'Recommendation' : 'Approval'} Request Email Draft
+              </h3>
+              <button
+                onClick={() => setApprovalEmailPreview(null)}
+                className="text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-4 mb-4">
+                <div className="flex items-start gap-3">
+                  <Mail className="w-5 h-5 text-cyan-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm text-cyan-800">
+                    <p className="font-medium mb-1">Preview and verify the email content below</p>
+                    <p className="text-cyan-700">Click "Open Draft in Email" to open this email in your default email client. You can review and send it manually.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 rounded-lg p-4 space-y-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="font-medium text-slate-700">To:</span>
+                  <span className="text-slate-600">{approvalEmailPreview.recipientEmail}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="font-medium text-slate-700">Recipient:</span>
+                  <span className="text-slate-600">{approvalEmailPreview.recipientLabel}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="font-medium text-slate-700">Subject:</span>
+                  <span className="text-slate-600">
+                    {approvalEmailPreview.approvalType.includes('hm') ? 'Recommendation' : 'Approval'} Request - {approvalEmailPreview.candidateName} ({approvalEmailPreview.position})
+                  </span>
+                </div>
+              </div>
+
+              <div className="border border-slate-200 rounded-lg p-6 bg-white">
+                <div className="space-y-4">
+                  <div className={`bg-gradient-to-r ${approvalEmailPreview.approvalType.includes('hm') ? 'from-blue-600 to-blue-700' : 'from-green-600 to-green-700'} text-white p-6 rounded-lg text-center`}>
+                    <h1 className="text-2xl font-bold">
+                      {approvalEmailPreview.approvalType.includes('hm') ? 'Recommendation Request' : 'Approval Request'}
+                    </h1>
+                  </div>
+
+                  <div className="space-y-4 text-slate-700">
+                    <p>Dear <strong>{approvalEmailPreview.recipientLabel}</strong>,</p>
+
+                    <p>You have been requested to provide your {approvalEmailPreview.approvalType.includes('hm') ? 'recommendation' : 'decision'} for the following candidate:</p>
+
+                    <div className="bg-slate-50 border-l-4 border-cyan-600 p-4 rounded">
+                      <h3 className="font-semibold text-slate-800 mb-2">Candidate Information</h3>
+                      <ul className="space-y-1 text-sm">
+                        <li><strong>Name:</strong> {approvalEmailPreview.candidateName}</li>
+                        <li><strong>Position:</strong> {approvalEmailPreview.position}</li>
+                        <li><strong>Recruiter:</strong> {approvalEmailPreview.candidate.recruiter} ({approvalEmailPreview.candidate.recruiter_email})</li>
+                      </ul>
+                    </div>
+
+                    <div className="bg-slate-50 p-4 rounded">
+                      <h3 className="font-semibold text-slate-800 mb-2">Assessment & Background Check</h3>
+                      <ul className="space-y-1 text-sm">
+                        <li><strong>Assessment Status:</strong> {approvalEmailPreview.candidate.assessment_status}</li>
+                        {approvalEmailPreview.candidate.assessment_score && (
+                          <li><strong>Assessment Score:</strong> {approvalEmailPreview.candidate.assessment_score}</li>
+                        )}
+                        <li><strong>Background Check:</strong> {approvalEmailPreview.candidate.background_check_status}</li>
+                      </ul>
+                    </div>
+
+                    {approvalEmailPreview.candidate.salary_proposal && (
+                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 p-4 rounded">
+                        <h3 className="font-semibold text-slate-800 mb-3">Proposed Salary Package</h3>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span>Basic Salary:</span>
+                            <span className="font-semibold">{approvalEmailPreview.candidate.salary_proposal.basic_salary}</span>
+                          </div>
+                          {approvalEmailPreview.candidate.salary_proposal.allowances && approvalEmailPreview.candidate.salary_proposal.allowances.length > 0 && (
+                            <div>
+                              <div className="font-medium mt-2 mb-1">Allowances:</div>
+                              {approvalEmailPreview.candidate.salary_proposal.allowances.map((allowance: any, index: number) => (
+                                <div key={index} className="flex justify-between pl-4">
+                                  <span>{allowance.name}:</span>
+                                  <span className="font-medium">{allowance.amount}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          <div className="flex justify-between pt-2 border-t-2 border-green-400">
+                            <span className="font-bold text-base">Total Salary:</span>
+                            <span className="font-bold text-lg text-green-700">{approvalEmailPreview.candidate.salary_proposal.total_salary}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="bg-amber-50 border border-amber-300 p-4 rounded">
+                      <h3 className="font-semibold text-slate-800 mb-2">Required Action</h3>
+                      <p className="text-sm mb-3">
+                        Click the {approvalEmailPreview.approvalType.includes('hm') ? 'recommendation' : 'approval'} link in your email to provide your decision.
+                      </p>
+                      <p className="text-sm text-amber-700">
+                        The email will contain a secure link that opens a response page where you can:
+                      </p>
+                      <ul className="text-sm text-amber-700 list-disc list-inside mt-1">
+                        <li>✓ Approve</li>
+                        <li>⟳ Request Revision</li>
+                        <li>✗ Reject</li>
+                      </ul>
+                    </div>
+
+                    <p>If you have any questions, please contact the recruitment team.</p>
+
+                    <p>Best regards,<br /><strong>Talent Acquisition Team</strong></p>
+
+                    <div className="text-xs text-slate-500 pt-4 border-t border-slate-200">
+                      The {approvalEmailPreview.approvalType.includes('hm') ? 'recommendation' : 'approval'} link is valid for 7 days and can only be used once.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="sticky bottom-0 bg-white border-t border-slate-200 px-6 py-4 flex items-center justify-end gap-3">
+              <button
+                onClick={() => setApprovalEmailPreview(null)}
+                className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSendApprovalEmail}
+                className="px-6 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors flex items-center gap-2"
               >
                 <Mail className="w-4 h-4" />
                 Open Draft in Email
