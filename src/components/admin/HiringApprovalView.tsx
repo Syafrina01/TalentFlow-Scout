@@ -172,15 +172,22 @@ Proposed Package Details:${companyText}${contractText}
 - Basic Salary: ${candidate.salary_proposal?.basic_salary || 'N/A'}${allowancesText}
 - Total Salary: ${candidate.salary_proposal?.total_salary || 'N/A'}
 
-VERIFICATION LINK:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+VERIFICATION LINK (Click or copy to browser):
+
 ${verifyUrl}
 
-Click the link above and select your decision:
-✓ Approve  |  ⟳ Request Change  |  ✗ Reject
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Note: This link is valid for 7 days and can only be used once. Click the link and select your decision on the verification page.
+INSTRUCTIONS:
+1. Click the link above (or copy and paste it into your browser)
+2. Review the complete candidate information and salary package
+3. Select your decision: Approve, Request Change, or Reject
+4. Submit your decision
 
-If you have any questions, please contact the recruitment team.
+IMPORTANT: This link is valid for 7 days and can only be used once.
+
+If you have any questions, please contact the recruitment team at ${candidate.recruiter_email}
 
 Best regards,
 Talent Acquisition Team`;
@@ -307,15 +314,22 @@ Proposed Package Details:${companyText}${contractText}
 - Basic Salary: ${candidate.salary_proposal?.basic_salary || 'N/A'}${allowancesText}
 - Total Salary: ${candidate.salary_proposal?.total_salary || 'N/A'}
 
-VERIFICATION LINK:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+VERIFICATION LINK (Click or copy to browser):
+
 ${verifyUrl}
 
-Click the link above and select your decision:
-✓ Approve  |  ⟳ Request Change  |  ✗ Reject
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Note: This link is valid for 7 days and can only be used once. Click the link and select your decision on the verification page.
+INSTRUCTIONS:
+1. Click the link above (or copy and paste it into your browser)
+2. Review the complete candidate information and salary package
+3. Select your decision: Approve, Request Change, or Reject
+4. Submit your decision
 
-If you have any questions, please contact the recruitment team.
+IMPORTANT: This link is valid for 7 days and can only be used once.
+
+If you have any questions, please contact the recruitment team at ${candidate.recruiter_email}
 
 Best regards,
 Talent Acquisition Team`;

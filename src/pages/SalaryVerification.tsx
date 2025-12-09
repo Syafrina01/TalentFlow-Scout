@@ -64,9 +64,16 @@ export default function SalaryVerification() {
   const [decision, setDecision] = useState<'Approved' | 'Rejected' | 'Request Change' | null>(null);
 
   useEffect(() => {
+    console.log('[SalaryVerification] Component mounted');
+    console.log('[SalaryVerification] Current URL:', window.location.href);
+    console.log('[SalaryVerification] Search params:', window.location.search);
+
     const params = new URLSearchParams(window.location.search);
     const id = params.get('candidate_id');
     const tokenParam = params.get('token');
+
+    console.log('[SalaryVerification] Candidate ID:', id);
+    console.log('[SalaryVerification] Token:', tokenParam);
 
     if (id) {
       setCandidateId(id);
@@ -82,6 +89,7 @@ export default function SalaryVerification() {
 
   const fetchVerificationDataByToken = async (token: string) => {
     try {
+      console.log('[SalaryVerification] Fetching data with token:', token);
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-salary-verification?token=${token}`,
         {
@@ -91,16 +99,21 @@ export default function SalaryVerification() {
         }
       );
 
+      console.log('[SalaryVerification] Response status:', response.status);
+
       if (!response.ok) {
-        throw new Error('Failed to fetch verification data');
+        const errorData = await response.json();
+        console.error('[SalaryVerification] Error response:', errorData);
+        throw new Error(errorData.error || 'Failed to fetch verification data');
       }
 
       const result = await response.json();
+      console.log('[SalaryVerification] Data loaded successfully');
       setCandidateId(result.candidate_id || '');
       setData(result);
-    } catch (err) {
-      setError('Unable to load candidate data. Please contact HR.');
-      console.error(err);
+    } catch (err: any) {
+      console.error('[SalaryVerification] Error:', err);
+      setError(err.message || 'Unable to load candidate data. Please contact HR.');
     } finally {
       setLoading(false);
     }
